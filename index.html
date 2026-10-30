@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة التمثيل بالأعمدة - الرياضيات للصف الرابع الابتدائي</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for winning animation -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        .bar-transition {
+            transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md">
+                    <i class="fa-solid fa-chart-column text-3xl text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black leading-tight">بطل التمثيل بالأعمدة 📊</h1>
+                    <p class="text-xs text-indigo-100 font-medium">الرياضيات - الصف الرابع الابتدائي (المنهج السعودي)</p>
+                </div>
+            </div>
+            <!-- Score & Level Container -->
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-xl flex items-center gap-2">
+                    <i class="fa-solid fa-star text-amber-300 text-lg animate-bounce"></i>
+                    <span class="text-xs text-indigo-100 font-bold hidden sm:inline">النقاط:</span>
+                    <span id="score" class="text-lg font-black text-yellow-300">0</span>
+                </div>
+                <div class="bg-white/10 border border-white/20 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-emerald-300"></i>
+                    <span id="level-indicator" class="text-sm font-extrabold text-white">المرحلة 1</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Dynamic Container -->
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full flex flex-col items-center justify-center">
+
+        <!-- Welcome / Mode Selection Screen -->
+        <div id="start-screen" class="w-full bg-white rounded-3xl p-6 md:p-10 custom-shadow border border-slate-200 text-center max-w-2xl">
+            <div class="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-800 mb-3">أهلاً بك يا بطل الرياضيات! 🚀</h2>
+            <p class="text-slate-600 mb-8 leading-relaxed font-medium">
+                تدرّب على مهارات **التمثيل بالأعمدة** من خلال إنشاء الرسوم البيانية وقراءة البيانات والتفسير الصحيح للنتائج!
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <button onclick="startGame('builder')" class="group relative bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl p-5 text-right transition-all hover:scale-105 shadow-md hover:shadow-xl border-b-4 border-indigo-900">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xl font-black">1. بنّاء الأعمدة 🏗️</span>
+                        <i class="fa-solid fa-sliders text-2xl group-hover:rotate-12 transition-transform text-indigo-200"></i>
+                    </div>
+                    <p class="text-xs text-indigo-100">قم برسم الأعمدة البيانية بنفسك بناءً على جدول البيانات المعطى.</p>
+                </button>
+
+                <button onclick="startGame('reader')" class="group relative bg-gradient-to-br from-purple-500 to-purple-700 text-white rounded-2xl p-5 text-right transition-all hover:scale-105 shadow-md hover:shadow-xl border-b-4 border-purple-900">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xl font-black">2. قراءة البيانات 🔍</span>
+                        <i class="fa-solid fa-magnifying-glass-chart text-2xl group-hover:scale-110 transition-transform text-purple-200"></i>
+                    </div>
+                    <p class="text-xs text-purple-100">أجب عن الأسئلة الممتعة من خلال قراءة وقارنة الرسم البياني المعروض.</p>
+                </button>
+            </div>
+
+            <div class="bg-indigo-50 rounded-2xl p-4 text-xs text-indigo-800 flex items-center gap-3 text-right">
+                <i class="fa-solid fa-lightbulb text-indigo-500 text-xl flex-shrink-0"></i>
+                <span><strong>ملاحظة منهجية:</strong> يتضمن هذا النشاط التدرب على مفاهيم المقياس، التدريج، عنوان الرسم، والمحاور الرأسية والأفقية.</span>
+            </div>
+        </div>
+
+        <!-- Game Screen (Hidden initially) -->
+        <div id="game-screen" class="w-full hidden flex-col gap-6">
+            
+            <!-- Question/Instruction Bar -->
+            <div class="bg-white rounded-2xl p-5 custom-shadow border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div id="task-icon" class="w-12 h-12 rounded-xl bg-indigo-500 text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
+                        1
+                    </div>
+                    <div>
+                        <span id="game-mode-tag" class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md mb-1 inline-block">نمط اللعب</span>
+                        <h3 id="instruction-title" class="text-lg md:text-xl font-bold text-slate-800">عنوان التعليمات</h3>
+                    </div>
+                </div>
+                <button onclick="showStartScreen()" class="text-xs font-bold text-slate-500 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 px-3 py-2 rounded-xl transition-colors flex items-center gap-1 self-end md:self-auto">
+                    <i class="fa-solid fa-house"></i> القائمة الرئيسية
+                </button>
+            </div>
+
+            <!-- Workspace Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Data Table Panel (Left or Top) -->
+                <div id="table-panel" class="lg:col-span-4 bg-white rounded-2xl p-5 custom-shadow border border-slate-200 flex flex-col gap-4">
+                    <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+                        <h4 id="table-title" class="font-black text-slate-700 flex items-center gap-2 text-base">
+                            <i class="fa-solid fa-table text-indigo-500"></i> جدول البيانات
+                        </h4>
+                        <span id="scale-badge" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold">المقياس: 1</span>
+                    </div>
+                    
+                    <!-- Table Display -->
+                    <div class="overflow-hidden rounded-xl border border-slate-200">
+                        <table class="w-full text-sm text-right">
+                            <thead id="table-head" class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                                <!-- Dynamic JS -->
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100">
+                                <!-- Dynamic JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mode Specific Interactive Controls for Builder Mode -->
+                    <div id="builder-controls" class="hidden flex-col gap-3 mt-2">
+                        <p class="text-xs text-slate-500 font-bold">اضغط على الأسهم لتعديل ارتفاع العمود في الرسم البياني:</p>
+                        <div id="column-inputs" class="flex flex-col gap-2">
+                            <!-- Dynamic inputs for columns -->
+                        </div>
+                    </div>
+
+                    <!-- Reader Mode Question Box -->
+                    <div id="reader-controls" class="hidden flex-col gap-3">
+                        <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-4">
+                            <p id="reader-question-text" class="font-bold text-indigo-950 text-base leading-relaxed mb-4">
+                                <!-- Question text -->
+                            </p>
+                            <div id="reader-options" class="grid grid-cols-1 gap-2.5">
+                                <!-- Option buttons dynamic -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Chart Panel (Right) -->
+                <div class="lg:col-span-8 bg-white rounded-2xl p-6 custom-shadow border border-slate-200 flex flex-col items-center justify-between min-h-[420px] relative">
+                    
+                    <!-- Graph Title -->
+                    <div class="text-center mb-4">
+                        <h3 id="graph-main-title" class="text-lg font-black text-slate-800">عنوان الرسم البياني</h3>
+                        <p id="graph-subtitle" class="text-xs text-slate-500 font-semibold">محور رصفي: القيم | محور أفقي: الفئات</p>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="w-full h-72 flex items-end relative border-b-2 border-r-2 border-slate-700 pr-2 pb-1 pl-4 my-2">
+                        
+                        <!-- Y-Axis Grid Lines & Labels -->
+                        <div id="y-axis-container" class="absolute inset-0 flex flex-col justify-between pointer-events-none pr-8">
+                            <!-- Dynamic Y-Axis Labels -->
+                        </div>
+
+                        <!-- Columns Container -->
+                        <div id="bars-container" class="w-full h-full flex justify-around items-end z-10 pr-6">
+                            <!-- Dynamic Bars JS -->
+                        </div>
+                    </div>
+
+                    <!-- Check / Submit Action Footer for Builder Mode -->
+                    <div id="builder-action" class="w-full mt-4 flex justify-end">
+                        <button onclick="checkBuilderAnswer()" class="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold px-8 py-3 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check text-xl"></i> تحقق من الإجابة
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Feedback Modal -->
+        <div id="feedback-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl transform transition-all scale-95 border border-slate-100">
+                <div id="modal-icon-bg" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+                    <i id="modal-icon" class="fa-solid"></i>
+                </div>
+                <h3 id="modal-title" class="text-2xl font-black mb-2">ممتاز يا بطل!</h3>
+                <p id="modal-message" class="text-slate-600 font-medium mb-6 text-sm leading-relaxed">إجابتك صحيحة ودقيقة جداً.</p>
+                <button id="modal-btn" onclick="nextLevel()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg transition-colors">
+                    السؤال التالي <i class="fa-solid fa-arrow-left mr-2"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-500 font-medium">
+        <p>مصمم لطلاب الصف الرابع الابتدائي 🇸🇦 | المنهج السعودي للرياضيات</p>
+    </footer>
+
+    <!-- Game Logic Script -->
+    <script>
+        // Game Dataset (Saudi Primary 4 Standard Compliant)
+        const datasets = [
+            {
+                mode: 'builder',
+                title: "الوسائل البحرية المفضلة للرحلات",
+                xAxisLabel: "الوسيلة",
+                yAxisLabel: "عدد الطلاب",
+                step: 2,
+                maxVal: 10,
+                categories: [
+                    { label: "القارب", val: 8, color: "from-blue-500 to-indigo-600" },
+                    { label: "السفينة", val: 4, color: "from-cyan-400 to-teal-500" },
+                    { label: "الدباب البحري", val: 6, color: "from-amber-400 to-orange-500" },
+                    { label: "اليخت", val: 2, color: "from-purple-500 to-pink-500" }
+                ]
+            },
+            {
+                mode: 'builder',
+                title: "عدد الفواكه المفضلة لدى الطلاب",
+                xAxisLabel: "الفاكهة",
+                yAxisLabel: "عدد الطلاب",
+                step: 5,
+                maxVal: 25,
+                categories: [
+                    { label: "التفاح", val: 15, color: "from-rose-500 to-red-600" },
+                    { label: "الموز", val: 25, color: "from-yellow-400 to-amber-500" },
+                    { label: "البرتقال", val: 10, color: "from-orange-400 to-amber-600" },
+                    { label: "العنب", val: 20, color: "from-purple-500 to-indigo-600" }
+                ]
+            },
+            {
+                mode: 'reader',
+                title: "الرياضيات المفضلة لطلاب الصف الرابع",
+                xAxisLabel: "الرياضة",
+                yAxisLabel: "عدد الطلاب",
+                step: 2,
+                maxVal: 12,
+                categories: [
+                    { label: "كرة القدم", val: 10, color: "from-emerald-400 to-green-600" },
+                    { label: "كرة السلة", val: 6, color: "from-amber-500 to-orange-600" },
+                    { label: "السباحة", val: 8, color: "from-sky-400 to-blue-600" },
+                    { label: "الجري", val: 4, color: "from-rose-400 to-pink-600" }
+                ],
+                questions: [
+                    {
+                        q: "ما هي الرياضة الأكثر تفضيلاً بين الطلاب؟",
+                        options: ["كرة القدم", "السباحة", "كرة السلة", "الجري"],
+                        correct: 0
+                    },
+                    {
+                        q: "كم عدد الطلاب الذين يفضلون السباحة؟",
+                        options: ["6 طلاب", "8 طلاب", "10 طلاب", "4 طلاب"],
+                        correct: 1
+                    },
+                    {
+                        q: "كم يزيد عدد الطلاب الذين يفضلون كرة القدم عن الذين يفضلون الجري؟",
+                        options: ["4 طلاب", "2 طلاب", "6 طلاب", "8 طلاب"],
+                        correct: 2 // 10 - 4 = 6
+                    }
+                ]
+            },
+            {
+                mode: 'builder',
+                title: "عدد الكتب المستعارة من المكتبة المدرسية",
+                xAxisLabel: "اليوم",
+                yAxisLabel: "عدد الكتب",
+                step: 10,
+                maxVal: 50,
+                categories: [
+                    { label: "الأحد", val: 30, color: "from-blue-500 to-indigo-600" },
+                    { label: "الإثنين", val: 40, color: "from-teal-400 to-emerald-600" },
+                    { label: "الثلاثاء", val: 20, color: "from-orange-400 to-amber-500" },
+                    { label: "الأربعاء", val: 50, color: "from-purple-500 to-pink-600" }
+                ]
+            },
+            {
+                mode: 'reader',
+                title: "عدد الحيوانات المفضلة في حديقة الحيوان",
+                xAxisLabel: "الحيوان",
+                yAxisLabel: "عدد الزوار",
+                step: 5,
+                maxVal: 30,
+                categories: [
+                    { label: "الأسد", val: 25, color: "from-amber-500 to-yellow-600" },
+                    { label: "الفيل", val: 15, color: "from-slate-400 to-slate-600" },
+                    { label: "الغزال", val: 30, color: "from-emerald-400 to-teal-600" },
+                    { label: "القرد", val: 20, color: "from-orange-400 to-rose-500" }
+                ],
+                questions: [
+                    {
+                        q: "ما هو الحيوان الذي حصل على 30 صوتاً من الزوار؟",
+                        options: ["الأسد", "الغزال", "الفيل", "القرد"],
+                        correct: 1
+                    },
+                    {
+                        q: "ما هو المجموع الكلي لزوار الأسد والفيل معاً؟",
+                        options: ["30 زائر", "40 زائر", "35 زائر", "50 زائر"],
+                        correct: 1 // 25 + 15 = 40
+                    }
+                ]
+            }
+        ];
+
+        // State Variables
+        let currentMode = 'builder';
+        let currentLevelIndex = 0;
+        let score = 0;
+        let userBarValues = [];
+        let currentQuestionIndex = 0;
+
+        // Initialize Game Mode Selection
+        function startGame(mode) {
+            currentMode = mode;
+            score = 0;
+            updateScoreUI();
+            
+            // Filter or find first level for selected mode
+            currentLevelIndex = datasets.findIndex(d => d.mode === mode);
+            if (currentLevelIndex === -1) currentLevelIndex = 0;
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('flex');
+
+            loadLevel();
+        }
+
+        function showStartScreen() {
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('flex');
+        }
+
+        function updateScoreUI() {
+            document.getElementById('score').innerText = score;
+        }
+
+        // Load Active Level
+        function loadLevel() {
+            const levelData = datasets[currentLevelIndex];
+            currentMode = levelData.mode;
+            
+            // Set Header Tags
+            document.getElementById('level-indicator').innerText = `المرحلة ${currentLevelIndex + 1}`;
+            document.getElementById('game-mode-tag').innerText = currentMode === 'builder' ? 'نمط: بنّاء الأعمدة' : 'نمط: قراءة البيانات';
+            document.getElementById('graph-main-title').innerText = levelData.title;
+            document.getElementById('scale-badge').innerText = `المقياس: كل خطوة = ${levelData.step}`;
+
+            // Initialize User Bar Heights (Start at 0 for Builder)
+            if (currentMode === 'builder') {
+                userBarValues = levelData.categories.map(() => 0);
+                document.getElementById('instruction-title').innerText = "قم بضبط ارتفاع الأعمدة البيانية لتطابق قيم الجدول!";
+                document.getElementById('builder-controls').classList.remove('hidden');
+                document.getElementById('builder-controls').classList.add('flex');
+                document.getElementById('reader-controls').classList.add('hidden');
+                document.getElementById('builder-action').classList.remove('hidden');
+                renderBuilderControls();
+            } else {
+                // Reader mode shows correct graph right away
+                userBarValues = levelData.categories.map(c => c.val);
+                currentQuestionIndex = 0;
+                document.getElementById('instruction-title').innerText = "اقرأ الرسم البياني جيداً وأجب عن السؤال التالي:";
+                document.getElementById('builder-controls').classList.add('hidden');
+                document.getElementById('reader-controls').classList.remove('hidden');
+                document.getElementById('reader-controls').classList.add('flex');
+                document.getElementById('builder-action').classList.add('hidden');
+                renderReaderQuestion();
+            }
+
+            renderTable();
+            renderYAxis();
+            renderGraph();
+        }
+
+        // Render Y Axis Grid
+        function renderYAxis() {
+            const data = datasets[currentLevelIndex];
+            const container = document.getElementById('y-axis-container');
+            container.innerHTML = '';
+
+            const stepsCount = data.maxVal / data.step;
+            for (let i = stepsCount; i >= 0; i--) {
+                const val = i * data.step;
+                const row = document.createElement('div');
+                row.className = 'w-full flex items-center justify-between border-b border-slate-200 text-xs text-slate-400 font-bold h-0';
+                row.innerHTML = `<span class="-translate-y-2 text-slate-600">${val}</span>`;
+                container.appendChild(row);
+            }
+        }
+
+        // Render Table
+        function renderTable() {
+            const data = datasets[currentLevelIndex];
+            const head = document.getElementById('table-head');
+            const body = document.getElementById('table-body');
+
+            head.innerHTML = `
+                <tr>
+                    <th class="p-2.5 border-b border-slate-200">${data.xAxisLabel}</th>
+                    <th class="p-2.5 border-b border-slate-200">${data.yAxisLabel}</th>
+                </tr>
+            `;
+
+            body.innerHTML = '';
+            data.categories.forEach((cat) => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50 transition-colors";
+                row.innerHTML = `
+                    <td class="p-2.5 font-bold text-slate-700">${cat.label}</td>
+                    <td class="p-2.5 font-extrabold text-indigo-600">${cat.val}</td>
+                `;
+                body.appendChild(row);
+            });
+        }
+
+        // Render Builder Interactive Control Buttons
+        function renderBuilderControls() {
+            const data = datasets[currentLevelIndex];
+            const container = document.getElementById('column-inputs');
+            container.innerHTML = '';
+
+            data.categories.forEach((cat, idx) => {
+                const box = document.createElement('div');
+                box.className = "flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200";
+                box.innerHTML = `
+                    <span class="text-xs font-bold text-slate-700">${cat.label}</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="adjustBar(${idx}, -${data.step})" class="w-8 h-8 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-700 font-black text-lg flex items-center justify-center transition-colors shadow-sm active:scale-95">-</button>
+                        <span id="bar-val-text-${idx}" class="w-8 text-center font-black text-slate-800 text-sm">0</span>
+                        <button onclick="adjustBar(${idx}, ${data.step})" class="w-8 h-8 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-black text-lg flex items-center justify-center transition-colors shadow-sm active:scale-95">+</button>
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        // Adjust Bar Value for Builder Mode
+        function adjustBar(index, delta) {
+            const data = datasets[currentLevelIndex];
+            let newVal = userBarValues[index] + delta;
+            
+            if (newVal >= 0 && newVal <= data.maxVal) {
+                userBarValues[index] = newVal;
+                document.getElementById(`bar-val-text-${index}`).innerText = newVal;
+                renderGraph();
+            }
+        }
+
+        // Render Graphic Canvas / Columns
+        function renderGraph() {
+            const data = datasets[currentLevelIndex];
+            const container = document.getElementById('bars-container');
+            container.innerHTML = '';
+
+            data.categories.forEach((cat, idx) => {
+                const currentVal = userBarValues[idx];
+                const heightPercent = (currentVal / data.maxVal) * 100;
+
+                const col = document.createElement('div');
+                col.className = "flex flex-col items-center h-full justify-end w-1/5 group";
+                
+                col.innerHTML = `
+                    <!-- Value Tag on Top of Bar -->
+                    <span class="text-xs font-black text-indigo-700 mb-1 transition-opacity ${currentVal > 0 ? 'opacity-100' : 'opacity-0'}">
+                        ${currentVal}
+                    </span>
+                    <!-- Dynamic Height Bar -->
+                    <div class="w-full rounded-t-xl bg-gradient-to-t ${cat.color} bar-transition shadow-md relative group-hover:brightness-110" 
+                         style="height: ${heightPercent}%;">
+                    </div>
+                    <!-- X Axis Category Label -->
+                    <span class="text-xs font-bold text-slate-700 mt-2 text-center truncate w-full" title="${cat.label}">
+                        ${cat.label}
+                    </span>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        // Render Question for Reader Mode
+        function renderReaderQuestion() {
+            const levelData = datasets[currentLevelIndex];
+            const qData = levelData.questions[currentQuestionIndex];
+
+            document.getElementById('reader-question-text').innerText = qData.q;
+            
+            const optionsContainer = document.getElementById('reader-options');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-right bg-white hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-400 p-3 rounded-xl font-bold text-sm text-slate-700 transition-all shadow-sm flex items-center justify-between";
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <i class="fa-regular fa-circle text-slate-300"></i>
+                `;
+                btn.onclick = () => checkReaderAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Check Answer for Builder Mode
+        function checkBuilderAnswer() {
+            const levelData = datasets[currentLevelIndex];
+            const isCorrect = levelData.categories.every((cat, idx) => cat.val === userBarValues[idx]);
+
+            if (isCorrect) {
+                score += 10;
+                updateScoreUI();
+                showModal(true, "إجابة ممتازة! 🎉", "لقد قمت بتمثيل كافة الأعمدة البيانية بالشكل الصحيح والحرص على الدقة.");
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                showModal(false, "حاول مرة أخرى 🛑", "تأكد من مطابقة جميع القيم في الجدول مع ارتفاع الأعمدة المقابلة لها.");
+            }
+        }
+
+        // Check Answer for Reader Mode
+        function checkReaderAnswer(selectedIndex) {
+            const levelData = datasets[currentLevelIndex];
+            const qData = levelData.questions[currentQuestionIndex];
+
+            if (selectedIndex === qData.correct) {
+                score += 10;
+                updateScoreUI();
+                
+                if (currentQuestionIndex < levelData.questions.length - 1) {
+                    showModal(true, "أحسنت! ⭐️", "إجابة صحيحة، دعنا ننتقل للسؤال التالي في هذا الرسم.");
+                } else {
+                    showModal(true, "مبدع ورائع! 🏆", "أجبت على جميع أسئلة هذا الرسم البياني بنجاح.");
+                    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                }
+            } else {
+                showModal(false, "إجابة غير صحيحة 🧐", "أعد قراءة الرسم البياني والمحاور بتمهل، ثم اختر الإجابة الصحيحة.");
+            }
+        }
+
+        // Show Result Modal
+        function showModal(isSuccess, title, message) {
+            const modal = document.getElementById('feedback-modal');
+            const modalIconBg = document.getElementById('modal-icon-bg');
+            const modalIcon = document.getElementById('modal-icon');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMsg = document.getElementById('modal-message');
+            const modalBtn = document.getElementById('modal-btn');
+
+            modalTitle.innerText = title;
+            modalMsg.innerText = message;
+
+            if (isSuccess) {
+                modalIconBg.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl bg-emerald-100 text-emerald-600";
+                modalIcon.className = "fa-solid fa-award";
+                modalBtn.innerText = "الانتقال للتالي 🚀";
+                modalBtn.onclick = () => {
+                    hideModal();
+                    if (currentMode === 'reader' && currentQuestionIndex < datasets[currentLevelIndex].questions.length - 1) {
+                        currentQuestionIndex++;
+                        renderReaderQuestion();
+                    } else {
+                        nextLevel();
+                    }
+                };
+            } else {
+                modalIconBg.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl bg-rose-100 text-rose-600";
+                modalIcon.className = "fa-solid fa-rotate-right";
+                modalBtn.innerText = "حاول مجدداً 🔄";
+                modalBtn.onclick = hideModal;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideModal() {
+            const modal = document.getElementById('feedback-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Advance to Next Level
+        function nextLevel() {
+            currentLevelIndex = (currentLevelIndex + 1) % datasets.length;
+            loadLevel();
+        }
+
+        // Window Load Initializer
+        window.onload = function() {
+            // Ready to play
+        };
+    </script>
+</body>
+</html>
